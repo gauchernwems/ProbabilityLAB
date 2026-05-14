@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Probability Experiment Lab</title>
+  <style>
+    :root {
+      --bg: #f6f7fb;
+      --card: #ffffff;
+      --ink: #1f2937;
+      --muted: #6b7280;
+      --accent: #4f46e5;
+      --accent-dark: #3730a3;
+      --good: #15803d;
+      --warn: #b45309;
+      --border: #d1d5db;
+      --green: #22c55e;
+      --red: #ef4444;
+      --blue: #3b82f6;
+      --yellow: #facc15;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(180deg, #eef2ff, var(--bg));
+      color: var(--ink);
+    }
+
+    header {
+      padding: 24px 16px 18px;
+      text-align: center;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.8rem, 4vw, 3rem);
+    }
+
+    header p {
+      margin: 10px auto 0;
+      max-width: 900px;
+      color: var(--muted);
+      font-size: 1.05rem;
+      line-height: 1.5;
+    }
+
+    main {
+      width: min(1180px, 94vw);
+      margin: 0 auto 40px;
+    }
+
+    .teacher-note {
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      color: #7c2d12;
+      border-radius: 18px;
+      padding: 14px 18px;
+      margin-bottom: 18px;
+      line-height: 1.45;
+    }
+
+    .panel {
+      display: none;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+      padding: 22px;
+    }
+
+    .panel.active { display: block; }
+
+    .card {
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 18px;
+      background: #ffffff;
+      margin-bottom: 18px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 22px;
+      align-items: start;
+    }
+
+    @media (max-width: 850px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+
+    .section-title {
+      margin: 0 0 8px;
+      font-size: 1.55rem;
+    }
+
+    .directions {
+      color: var(--muted);
+      line-height: 1.5;
+      margin-top: 0;
+    }
+
+    button {
+      border: none;
+      background: var(--accent);
+      color: white;
+      border-radius: 999px;
+      padding: 11px 18px;
+      font-size: 1rem;
+      cursor: pointer;
+      font-weight: 700;
+      transition: 0.15s ease;
+    }
+
+    button:hover {
+      background: var(--accent-dark);
+      transform: translateY(-1px);
+    }
+
+    button.secondary {
+      background: #e5e7eb;
+      color: var(--ink);
+    }
+
+    button.secondary:hover { background: #d1d5db; }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 14px 0;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 11px;
+      font-size: 1rem;
+      background: white;
+    }
+
+    textarea {
+      min-height: 92px;
+      resize: vertical;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .input-grid {
+      display: grid;
+      grid-template-columns: 1.1fr .9fr .9fr;
+      gap: 8px;
+      align-items: center;
+      margin: 10px 0;
+    }
+
+    .input-grid.header-row {
+      font-weight: 800;
+      color: var(--muted);
+      font-size: .9rem;
+    }
+
+    .legend {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin: 14px 0;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+    }
+
+    .swatch {
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      border: 1px solid rgba(0,0,0,.15);
+    }
+
+    .spinner-wrap {
+      display: grid;
+      place-items: center;
+      padding: 10px;
+    }
+
+    .pointer {
+      width: 0;
+      height: 0;
+      border-left: 15px solid transparent;
+      border-right: 15px solid transparent;
+      border-top: 28px solid #111827;
+      margin-bottom: -5px;
+      z-index: 2;
+    }
+
+    .spinner {
+      width: min(330px, 80vw);
+      aspect-ratio: 1 / 1;
+      border-radius: 50%;
+      border: 8px solid #111827;
+      background: conic-gradient(
+        var(--green) 0deg 36deg,
+        var(--green) 36deg 72deg,
+        var(--green) 72deg 108deg,
+        var(--green) 108deg 144deg,
+        var(--red) 144deg 180deg,
+        var(--red) 180deg 216deg,
+        var(--red) 216deg 252deg,
+        var(--blue) 252deg 288deg,
+        var(--blue) 288deg 324deg,
+        var(--yellow) 324deg 360deg
+      );
+      position: relative;
+      transition: transform 1.1s cubic-bezier(.17,.67,.29,1.22);
+      box-shadow: inset 0 0 0 4px rgba(255,255,255,.55), 0 10px 25px rgba(0,0,0,.12);
+    }
+
+    .spinner::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: repeating-conic-gradient(
+        from 0deg,
+        transparent 0deg 35deg,
+        rgba(255,255,255,.95) 35deg 36deg
+      );
+      pointer-events: none;
+    }
+
+    .spinner::after {
+      content: "";
+      position: absolute;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: #111827;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      border: 5px solid white;
+    }
+
+    .coin-stage {
+      display: grid;
+      place-items: center;
+      min-height: 250px;
+    }
+
+    .coin {
+      width: 190px;
+      height: 190px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #ffffff, #d1d5db 38%, #9ca3af 100%);
+      border: 8px solid #374151;
+      display: grid;
+      place-items: center;
+      font-size: 3rem;
+      font-weight: 900;
+      box-shadow: 0 12px 30px rgba(0,0,0,.14);
+      transition: transform .6s ease;
+    }
+
+    .coin.flip { transform: rotateY(720deg) scale(1.05); }
+
+    .result-big {
+      font-size: 1.5rem;
+      font-weight: 900;
+      margin: 12px 0;
+    }
+
+    .mini-note {
+      font-size: .92rem;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .feedback {
+      margin-top: 10px;
+      font-weight: 800;
+    }
+
+    .good { color: var(--good); }
+    .warn { color: var(--warn); }
+
+    .stamp {
+      display: inline-block;
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: .86rem;
+      font-weight: 800;
+      background: #eef2ff;
+      color: #3730a3;
+      margin-left: 6px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      border-radius: 12px;
+      margin-top: 10px;
+    }
+
+    th, td {
+      border-bottom: 1px solid var(--border);
+      padding: 10px 8px;
+      text-align: center;
+    }
+
+    th {
+      background: #f3f4f6;
+      color: #374151;
+      font-size: .95rem;
+    }
+
+    .bar-bg {
+      height: 16px;
+      background: #e5e7eb;
+      border-radius: 999px;
+      overflow: hidden;
+      min-width: 90px;
+    }
+
+    .bar-fill {
+      height: 100%;
+      width: 0%;
+      background: #6366f1;
+      transition: width .2s;
+    }
+
+    .reflection-checklist label {
+      display: block;
+      margin: 9px 0;
+      line-height: 1.35;
+    }
+
+    .print-note {
+      text-align: center;
+      color: var(--muted);
+      margin-top: 18px;
+      font-size: .9rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Probability Experiment Lab</h1>
+    <p>Objective: Test whether experimental probability gets closer to theoretical probability as the number of trials increases.</p>
+    <p><strong>45-Minute Lab Plan:</strong> Predict → Calculate theoretical probability → Run small trials → Run larger trials → Compare → Explain.</p>
+  </header>
+
+  <main>
+    <div class="teacher-note">
+      <strong>Teacher setup:</strong> Students move screen-by-screen. They cannot continue until each required section is completed. Students calculate probabilities themselves; no answer button is included.
+    </div>
+
+    <section id="screen1" class="panel active">
+      <div class="card">
+        <h2 class="section-title">Warm-Up Prediction</h2>
+        <p class="directions">Imagine a spinner where some colors take up more space than others. Do you think the results will perfectly match the theoretical probabilities every single time?</p>
+        <textarea id="warmupResponse" placeholder="I think..."></textarea>
+        <div class="controls">
+          <button onclick="validateWarmup()">Begin Probability Lab</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="screen2" class="panel">
+      <div class="card">
+        <h2 class="section-title">Part 1: Spinner Theoretical Probability</h2>
+        <p class="directions">Before spinning, enter each theoretical probability as a fraction and as a decimal. Decimals can be rounded to the nearest hundredth.</p>
+
+        <label for="spinnerPrediction"><strong>Prediction:</strong> Which color do you think will happen most often after 10 spins? After 100 spins?</label>
+        <textarea id="spinnerPrediction" placeholder="After 10 spins, I think... After 100 spins, I think..."></textarea>
+
+        <div class="legend">
+          <div class="legend-item"><span class="swatch" style="background: var(--green)"></span> Green: 4 sections</div>
+          <div class="legend-item"><span class="swatch" style="background: var(--red)"></span> Red: 3 sections</div>
+          <div class="legend-item"><span class="swatch" style="background: var(--blue)"></span> Blue: 2 sections</div>
+          <div class="legend-item"><span class="swatch" style="background: var(--yellow)"></span> Yellow: 1 section</div>
+          <div class="legend-item"><strong>Total: 10 equal sections</strong></div>
+        </div>
+
+        <div class="input-grid header-row">
+          <div>Outcome</div><div>Fraction</div><div>Decimal</div>
+        </div>
+        <div id="spinnerInputs"></div>
+
+        <div class="controls">
+          <button onclick="checkSpinnerTheory()">Check Theoretical Probability</button>
+          <button onclick="validateSpinnerTheoryScreen()">Continue to Spinner Experiment</button>
+        </div>
+        <div id="spinnerTheoryFeedback" class="feedback"></div>
+      </div>
+    </section>
+
+    <section id="screen3" class="panel">
+      <div class="card">
+        <h2 class="section-title">Part 2: Spin and Collect Data</h2>
+        <p class="directions">Spin many times. The spinner will land on the same color that gets counted in the table.</p>
+
+        <div class="spinner-wrap">
+          <div class="pointer"></div>
+          <div id="spinner" class="spinner"></div>
+        </div>
+
+        <div class="result-big">Last spin: <span id="lastSpin">None yet</span></div>
+        <div class="controls">
+          <button onclick="spinOnce()">Spin 1 Time</button>
+          <button onclick="spinMany(10)">Spin 10 Times</button>
+          <button onclick="spinMany(50)">Spin 50 Times</button>
+          <button onclick="spinMany(100)">Spin 100 Times</button>
+          <button class="secondary" onclick="resetSpinnerExperiment()">Reset</button>
+        </div>
+
+        <div class="mini-note"><strong>Required:</strong> Complete at least 10 spins before continuing. Try 50 or 100 if you have time.</div>
+      </div>
+
+      <div class="card">
+        <h2 class="section-title">Spinner Results <span class="stamp">Trials: <span id="spinnerTrials">0</span></span></h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Outcome</th>
+              <th>Theoretical Probability</th>
+              <th>Count</th>
+              <th>Experimental Probability</th>
+              <th>Visual</th>
+              <th>Difference</th>
+            </tr>
+          </thead>
+          <tbody id="spinnerTableBody"></tbody>
+        </table>
+      </div>
+
+      <div class="controls" style="justify-content:center;">
+        <button onclick="validateSpinnerExperimentScreen()">Continue to Spinner Reflection</button>
+      </div>
+    </section>
+
+    <section id="screen4" class="panel">
+      <div class="card">
+        <h2 class="section-title">Spinner Reflection Questions</h2>
+
+        <p><strong>Question 1:</strong> After 10 spins, what looked surprising?</p>
+        <textarea id="spinnerQ1" placeholder="Type your answer here..."></textarea>
+
+        <p><strong>Question 2:</strong> After 50 or 100 spins, did the results get closer to the theoretical probabilities?</p>
+        <textarea id="spinnerQ2" placeholder="Type your answer here..."></textarea>
+
+        <p><strong>Question 3:</strong> Which color had the biggest difference between theoretical and experimental probability?</p>
+        <textarea id="spinnerQ3" placeholder="Type your answer here..."></textarea>
+
+        <p class="directions">Choose the statements that are true.</p>
+        <div class="reflection-checklist">
+          <label><input type="checkbox" class="spinCheck" value="smallSamples"> Small numbers of trials can have experimental probabilities that are far from theoretical probabilities.</label>
+          <label><input type="checkbox" class="spinCheck" value="moreTrials"> As the number of trials increases, experimental probability usually gets closer to theoretical probability.</label>
+          <label><input type="checkbox" class="spinCheck" value="alwaysExact"> Experimental probability will always exactly equal theoretical probability.</label>
+          <label><input type="checkbox" class="spinCheck" value="randomness"> Randomness means results can vary, especially with fewer trials.</label>
+        </div>
+
+        <p><strong>Final Spinner Conclusion:</strong> How does experimental probability compare to theoretical probability as the number of trials increases?</p>
+        <textarea id="spinnerReflection" placeholder="Type your conclusion here..."></textarea>
+
+        <div class="controls">
+          <button onclick="gradeSpinnerReflection()">Check Reflection</button>
+          <button onclick="validateSpinnerReflectionScreen()">Continue to Coin Theoretical Probability</button>
+        </div>
+        <div id="spinnerReflectionFeedback" class="feedback"></div>
+      </div>
+    </section>
+
+    <section id="screen5" class="panel">
+      <div class="card">
+        <h2 class="section-title">Part 1: Coin Theoretical Probability</h2>
+        <p class="directions">A fair coin has two equally likely outcomes: Heads and Tails. Enter the theoretical probability of each.</p>
+
+        <label for="coinPrediction"><strong>Prediction:</strong> If you flip a coin 10 times, do you expect exactly 5 heads and 5 tails? Why or why not?</label>
+        <textarea id="coinPrediction" placeholder="I expect... because..."></textarea>
+
+        <div class="input-grid header-row">
+          <div>Outcome</div><div>Fraction</div><div>Decimal</div>
+        </div>
+
+        <div class="input-grid">
+          <div><strong>Heads</strong></div>
+          <input id="coinHeadsFraction" placeholder="fraction" />
+          <input id="coinHeadsDecimal" placeholder="decimal" />
+        </div>
+        <div class="input-grid">
+          <div><strong>Tails</strong></div>
+          <input id="coinTailsFraction" placeholder="fraction" />
+          <input id="coinTailsDecimal" placeholder="decimal" />
+        </div>
+
+        <div class="controls">
+          <button onclick="checkCoinTheory()">Check Theoretical Probability</button>
+          <button onclick="validateCoinTheoryScreen()">Continue to Coin Flip Experiment</button>
+        </div>
+        <div id="coinTheoryFeedback" class="feedback"></div>
+      </div>
+    </section>
+
+    <section id="screen6" class="panel">
+      <div class="card">
+        <h2 class="section-title">Part 2: Flip and Collect Data</h2>
+        <p class="directions">Flip the coin many times. Compare your experimental probability to the theoretical probability.</p>
+
+        <div class="coin-stage">
+          <div id="coin" class="coin">?</div>
+        </div>
+
+        <div class="result-big">Last flip: <span id="lastFlip">None yet</span></div>
+        <div class="controls">
+          <button onclick="flipOnce()">Flip 1 Time</button>
+          <button onclick="flipMany(10)">Flip 10 Times</button>
+          <button onclick="flipMany(50)">Flip 50 Times</button>
+          <button onclick="flipMany(100)">Flip 100 Times</button>
+          <button class="secondary" onclick="resetCoinExperiment()">Reset</button>
+        </div>
+        <div class="mini-note"><strong>Required:</strong> Complete at least 10 flips before continuing.</div>
+      </div>
+
+      <div class="card">
+        <h2 class="section-title">Coin Results <span class="stamp">Trials: <span id="coinTrials">0</span></span></h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Outcome</th>
+              <th>Theoretical Probability</th>
+              <th>Count</th>
+              <th>Experimental Probability</th>
+              <th>Visual</th>
+              <th>Difference</th>
+            </tr>
+          </thead>
+          <tbody id="coinTableBody"></tbody>
+        </table>
+      </div>
+
+      <div class="controls" style="justify-content:center;">
+        <button onclick="validateCoinExperimentScreen()">Continue to Coin Reflection</button>
+      </div>
+    </section>
+
+    <section id="screen7" class="panel">
+      <div class="card">
+        <h2 class="section-title">Coin Checkpoint + Reflection</h2>
+
+        <p><strong>Question 1:</strong> Compare your coin results after 10 flips and after 50 or more flips.</p>
+        <textarea id="coinCheckpoint" placeholder="After 10 flips, my experimental probability was... After more flips, it..."></textarea>
+
+        <label for="coinQuestion"><strong>Question 2:</strong> If you flip heads 4 times in a row, is tails guaranteed next?</label>
+        <select id="coinQuestion">
+          <option value="">Choose one...</option>
+          <option value="yes">Yes, tails is guaranteed.</option>
+          <option value="no">No, each flip still has a 1/2 chance of heads and 1/2 chance of tails.</option>
+          <option value="depends">It depends on what happened before.</option>
+        </select>
+
+        <p><strong>Question 3:</strong> Explain your answer using the words theoretical probability and experimental probability.</p>
+        <textarea id="coinReflection" placeholder="Type your explanation here..."></textarea>
+
+        <div class="controls">
+          <button onclick="gradeCoinReflection()">Check Reflection</button>
+          <button onclick="validateCoinReflectionScreen()">Continue to Final Exit Ticket</button>
+        </div>
+        <div id="coinReflectionFeedback" class="feedback"></div>
+      </div>
+    </section>
+
+    <section id="screen8" class="panel">
+      <div class="card">
+        <h2 class="section-title">Final Exit Ticket</h2>
+        <p class="directions">Use evidence from today’s experiments.</p>
+        <textarea id="exitTicket" placeholder="Explain why experimental probability gets closer to theoretical probability when there are more trials. Use evidence from either the spinner or coin experiment."></textarea>
+        <div class="controls">
+          <button onclick="gradeExitTicket()">Check Exit Ticket</button>
+          <button onclick="validateExitTicketScreen()">Submit Exit Ticket</button>
+        </div>
+        <div id="exitTicketFeedback" class="feedback"></div>
+      </div>
+      <p class="print-note">Student goal: Run enough trials to explain why experimental probability does not always match theoretical probability exactly.</p>
+    </section>
+      <section id="screen9" class="panel">
+      <div class="card" style="text-align:center; padding:50px 24px;">
+        <h2 class="section-title">Great Job Today!</h2>
+        <p class="directions" style="font-size:1.15rem; max-width:700px; margin:0 auto 20px; line-height:1.7;">
+          You finished the Probability Experiment Lab.
+          <br><br>
+          Please work on:
+        </p>
+
+        <div style="background:#eef2ff; border:2px solid #c7d2fe; border-radius:20px; padding:28px; max-width:700px; margin:0 auto;">
+          <h3 style="margin-top:0; font-size:1.5rem; color:#3730a3;">Delta Math Time</h3>
+          <p style="font-size:1.1rem; line-height:1.7; margin-bottom:0;">
+            • Past weeks' Delta Math assignments
+            <br><br>
+            OR
+            <br><br>
+            • The in-class Delta Math assignment posted today
+          </p>
+        </div>
+
+        <p class="print-note" style="margin-top:28px; font-size:1rem;">
+          Raise your hand if you need help finding the assignment.
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const spinnerOutcomes = [
+      { name: "Green", fraction: "4/10", simplified: "2/5", decimal: 0.4, color: "#22c55e", ranges: [[0,36],[36,72],[72,108],[108,144]] },
+      { name: "Red", fraction: "3/10", simplified: "3/10", decimal: 0.3, color: "#ef4444", ranges: [[144,180],[180,216],[216,252]] },
+      { name: "Blue", fraction: "2/10", simplified: "1/5", decimal: 0.2, color: "#3b82f6", ranges: [[252,288],[288,324]] },
+      { name: "Yellow", fraction: "1/10", simplified: "1/10", decimal: 0.1, color: "#facc15", ranges: [[324,360]] }
+    ];
+
+    let spinnerCounts = { Green: 0, Red: 0, Blue: 0, Yellow: 0 };
+    let spinnerTrials = 0;
+    let spinnerRotation = 0;
+    let coinCounts = { Heads: 0, Tails: 0 };
+    let coinTrials = 0;
+
+    function requireText(id, min = 5) {
+      const el = document.getElementById(id);
+      return Boolean(el && el.value.trim().length >= min);
+    }
+
+    function setFeedback(id, message, className) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.className = 'feedback ' + className;
+      el.textContent = message;
+    }
+
+    function goToScreen(number) {
+      document.querySelectorAll('.panel').forEach(panel => panel.classList.remove('active'));
+      const target = document.getElementById('screen' + number);
+      if (target) {
+        target.classList.add('active');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+
+    function validateWarmup() {
+      if (requireText('warmupResponse', 1)) goToScreen(2);
+      else alert('Please answer the warm-up question before continuing.');
+    }
+
+    function validateSpinnerTheoryScreen() {
+      const feedback = document.getElementById('spinnerTheoryFeedback').textContent;
+      if (feedback.includes('Correct') && requireText('spinnerPrediction', 8)) goToScreen(3);
+      else alert('Complete the spinner prediction and check the theoretical probability section correctly before moving on.');
+    }
+
+    function validateSpinnerExperimentScreen() {
+      if (spinnerTrials >= 10) goToScreen(4);
+      else alert('Please complete at least 10 spinner trials before continuing.');
+    }
+
+    function validateSpinnerReflectionScreen() {
+      const checked = [...document.querySelectorAll('.spinCheck:checked')].map(c => c.value);
+      const hasCorrectChecks = checked.includes('smallSamples') && checked.includes('moreTrials') && checked.includes('randomness') && !checked.includes('alwaysExact');
+      const allWritten = requireText('spinnerQ1') && requireText('spinnerQ2') && requireText('spinnerQ3') && requireText('spinnerReflection', 15);
+      if (allWritten && hasCorrectChecks) goToScreen(5);
+      else alert('Complete all spinner reflection questions and choose the correct statements before continuing.');
+    }
+
+    function validateCoinTheoryScreen() {
+      const feedback = document.getElementById('coinTheoryFeedback').textContent;
+      if (feedback.includes('Correct') && requireText('coinPrediction', 8)) goToScreen(6);
+      else alert('Complete the coin prediction and check the theoretical probability section correctly before moving on.');
+    }
+
+    function validateCoinExperimentScreen() {
+      if (coinTrials >= 10) goToScreen(7);
+      else alert('Please complete at least 10 coin flips before continuing.');
+    }
+
+    function validateCoinReflectionScreen() {
+      const choice = document.getElementById('coinQuestion').value;
+      if (requireText('coinCheckpoint', 15) && requireText('coinReflection', 15) && choice !== '') goToScreen(8);
+      else alert('Please complete the coin reflection section before continuing.');
+    }
+
+    function validateExitTicketScreen() {
+      if (requireText('exitTicket', 25)) {
+        goToScreen(9);
+      }
+      else {
+        alert('Please complete the exit ticket before submitting.');
+      }
+    }
+
+    function normalizeFraction(value) {
+      return String(value).trim().replace(/\s/g, '');
+    }
+
+    function decimalClose(input, correct) {
+      const num = Number(input);
+      if (Number.isNaN(num)) return false;
+      return Math.abs(num - correct) <= 0.01;
+    }
+
+    function createSpinnerInputs() {
+      const container = document.getElementById('spinnerInputs');
+      container.innerHTML = '';
+      spinnerOutcomes.forEach(item => {
+        const row = document.createElement('div');
+        row.className = 'input-grid';
+        row.innerHTML = '<div><strong>' + item.name + '</strong></div>' +
+          '<input id="' + item.name + 'Fraction" placeholder="fraction" />' +
+          '<input id="' + item.name + 'Decimal" placeholder="decimal" />';
+        container.appendChild(row);
+      });
+    }
+
+    function checkSpinnerTheory() {
+      let correct = 0;
+      spinnerOutcomes.forEach(item => {
+        const frac = normalizeFraction(document.getElementById(item.name + 'Fraction').value);
+        const dec = document.getElementById(item.name + 'Decimal').value.trim();
+        const fracCorrect = frac === item.fraction || frac === item.simplified;
+        const decCorrect = decimalClose(dec, item.decimal);
+        if (fracCorrect && decCorrect) correct++;
+      });
+      if (correct === spinnerOutcomes.length) setFeedback('spinnerTheoryFeedback', 'Correct! Now collect experimental data by spinning.', 'good');
+      else setFeedback('spinnerTheoryFeedback', 'You have ' + correct + ' out of ' + spinnerOutcomes.length + ' rows fully correct. Check your fractions and decimals.', 'warn');
+    }
+
+    function chooseSpinnerOutcome() {
+      const r = Math.random() * 10;
+      if (r < 4) return spinnerOutcomes[0];
+      if (r < 7) return spinnerOutcomes[1];
+      if (r < 9) return spinnerOutcomes[2];
+      return spinnerOutcomes[3];
+    }
+
+    function randomAngleInsideOutcome(outcome) {
+      const range = outcome.ranges[Math.floor(Math.random() * outcome.ranges.length)];
+      return range[0] + 5 + Math.random() * 26;
+    }
+
+    function rotateSpinnerToOutcome(outcome) {
+      const landingAngle = randomAngleInsideOutcome(outcome);
+      const extraSpins = 4 + Math.floor(Math.random() * 3);
+      spinnerRotation = (extraSpins * 360) - landingAngle;
+      document.getElementById('spinner').style.transform = 'rotate(' + spinnerRotation + 'deg)';
+    }
+
+    function recordSpinnerOutcome(outcome, animate) {
+      spinnerCounts[outcome.name]++;
+      spinnerTrials++;
+      document.getElementById('lastSpin').textContent = outcome.name;
+      if (animate) rotateSpinnerToOutcome(outcome);
+      updateSpinnerTable();
+    }
+
+    function spinOnce() {
+      recordSpinnerOutcome(chooseSpinnerOutcome(), true);
+    }
+
+    function spinMany(n) {
+      let finalOutcome = null;
+      for (let i = 0; i < n; i++) {
+        finalOutcome = chooseSpinnerOutcome();
+        recordSpinnerOutcome(finalOutcome, false);
+      }
+      document.getElementById('lastSpin').textContent = finalOutcome.name;
+      rotateSpinnerToOutcome(finalOutcome);
+      updateSpinnerTable();
+    }
+
+    function updateSpinnerTable() {
+      document.getElementById('spinnerTrials').textContent = spinnerTrials;
+      const tbody = document.getElementById('spinnerTableBody');
+      tbody.innerHTML = '';
+      spinnerOutcomes.forEach(item => {
+        const count = spinnerCounts[item.name];
+        const exp = spinnerTrials === 0 ? 0 : count / spinnerTrials;
+        const diff = Math.abs(exp - item.decimal);
+        const row = document.createElement('tr');
+        row.innerHTML = '<td><strong>' + item.name + '</strong></td>' +
+          '<td>' + item.fraction + '</td>' +
+          '<td>' + count + '</td>' +
+          '<td>' + (spinnerTrials === 0 ? '-' : exp.toFixed(2)) + '</td>' +
+          '<td><div class="bar-bg"><div class="bar-fill" style="width:' + Math.min(exp * 100, 100) + '%; background:' + item.color + ';"></div></div></td>' +
+          '<td>' + (spinnerTrials === 0 ? '-' : diff.toFixed(2)) + '</td>';
+        tbody.appendChild(row);
+      });
+    }
+
+    function resetSpinnerExperiment() {
+      spinnerCounts = { Green: 0, Red: 0, Blue: 0, Yellow: 0 };
+      spinnerTrials = 0;
+      spinnerRotation = 0;
+      document.getElementById('spinner').style.transform = 'rotate(0deg)';
+      document.getElementById('lastSpin').textContent = 'None yet';
+      updateSpinnerTable();
+    }
+
+    function gradeSpinnerReflection() {
+      const checked = [...document.querySelectorAll('.spinCheck:checked')].map(c => c.value);
+      const text = document.getElementById('spinnerReflection').value.toLowerCase();
+      const hasCorrectChecks = checked.includes('smallSamples') && checked.includes('moreTrials') && checked.includes('randomness') && !checked.includes('alwaysExact');
+      const hasKeyWords = text.includes('theoretical') && text.includes('experimental') && (text.includes('closer') || text.includes('more trials') || text.includes('increase'));
+      if (hasCorrectChecks && hasKeyWords) setFeedback('spinnerReflectionFeedback', 'Strong conclusion! You explained that more trials usually make experimental probability closer to theoretical probability.', 'good');
+      else if (!hasCorrectChecks) setFeedback('spinnerReflectionFeedback', 'Check the statements again. Experimental probability does not always exactly equal theoretical probability.', 'warn');
+      else setFeedback('spinnerReflectionFeedback', 'Good start. Add the words theoretical probability and experimental probability, and explain what happens as trials increase.', 'warn');
+    }
+
+    function checkCoinTheory() {
+      const hf = normalizeFraction(document.getElementById('coinHeadsFraction').value);
+      const hd = document.getElementById('coinHeadsDecimal').value.trim();
+      const tf = normalizeFraction(document.getElementById('coinTailsFraction').value);
+      const td = document.getElementById('coinTailsDecimal').value.trim();
+      const headsCorrect = hf === '1/2' && decimalClose(hd, 0.5);
+      const tailsCorrect = tf === '1/2' && decimalClose(td, 0.5);
+      if (headsCorrect && tailsCorrect) setFeedback('coinTheoryFeedback', 'Correct! Each outcome has a theoretical probability of 1/2, or 0.5.', 'good');
+      else setFeedback('coinTheoryFeedback', 'Not yet. A fair coin has two equally likely outcomes.', 'warn');
+    }
+
+    function flipOnce(animate = true) {
+      const outcome = Math.random() < 0.5 ? 'Heads' : 'Tails';
+      coinCounts[outcome]++;
+      coinTrials++;
+      document.getElementById('lastFlip').textContent = outcome;
+      document.getElementById('coin').textContent = outcome === 'Heads' ? 'H' : 'T';
+      if (animate) {
+        const coin = document.getElementById('coin');
+        coin.classList.remove('flip');
+        void coin.offsetWidth;
+        coin.classList.add('flip');
+      }
+      updateCoinTable();
+    }
+
+    function flipMany(n) {
+      for (let i = 0; i < n; i++) flipOnce(false);
+      const coin = document.getElementById('coin');
+      coin.classList.remove('flip');
+      void coin.offsetWidth;
+      coin.classList.add('flip');
+      updateCoinTable();
+    }
+
+    function updateCoinTable() {
+      document.getElementById('coinTrials').textContent = coinTrials;
+      const tbody = document.getElementById('coinTableBody');
+      tbody.innerHTML = '';
+      ['Heads', 'Tails'].forEach(name => {
+        const count = coinCounts[name];
+        const exp = coinTrials === 0 ? 0 : count / coinTrials;
+        const diff = Math.abs(exp - 0.5);
+        const row = document.createElement('tr');
+        row.innerHTML = '<td><strong>' + name + '</strong></td>' +
+          '<td>1/2</td>' +
+          '<td>' + count + '</td>' +
+          '<td>' + (coinTrials === 0 ? '-' : exp.toFixed(2)) + '</td>' +
+          '<td><div class="bar-bg"><div class="bar-fill" style="width:' + Math.min(exp * 100, 100) + '%;"></div></div></td>' +
+          '<td>' + (coinTrials === 0 ? '-' : diff.toFixed(2)) + '</td>';
+        tbody.appendChild(row);
+      });
+    }
+
+    function resetCoinExperiment() {
+      coinCounts = { Heads: 0, Tails: 0 };
+      coinTrials = 0;
+      document.getElementById('lastFlip').textContent = 'None yet';
+      document.getElementById('coin').textContent = '?';
+      updateCoinTable();
+    }
+
+    function gradeCoinReflection() {
+      const choice = document.getElementById('coinQuestion').value;
+      const text = document.getElementById('coinReflection').value.toLowerCase();
+      const checkpoint = document.getElementById('coinCheckpoint').value.toLowerCase();
+      const hasWords = text.includes('theoretical') && text.includes('experimental');
+      const hasIdea = text.includes('1/2') || text.includes('0.5') || text.includes('50') || text.includes('independent') || text.includes('not guaranteed');
+      const hasCheckpoint = checkpoint.length > 15;
+      if (choice === 'no' && hasWords && hasIdea && hasCheckpoint) setFeedback('coinReflectionFeedback', 'Correct! Past flips do not guarantee the next flip. The theoretical probability is still 1/2 for each outcome.', 'good');
+      else if (choice !== 'no') setFeedback('coinReflectionFeedback', 'Think again: Does a coin remember what happened before? Each new flip still has the same theoretical probability.', 'warn');
+      else if (!hasCheckpoint) setFeedback('coinReflectionFeedback', 'Correct choice. Add more to the checkpoint comparing your smaller and larger number of flips.', 'warn');
+      else setFeedback('coinReflectionFeedback', 'Correct choice. Now strengthen your explanation using theoretical probability, experimental probability, and 1/2 or 0.5.', 'warn');
+    }
+
+    function gradeExitTicket() {
+      const text = document.getElementById('exitTicket').value.toLowerCase();
+      const hasKeyWords = text.includes('experimental') && text.includes('theoretical');
+      const hasMoreTrials = text.includes('more trials') || text.includes('larger') || text.includes('increase') || text.includes('closer') || text.includes('100') || text.includes('50');
+      const hasEvidence = text.includes('spinner') || text.includes('coin') || text.includes('green') || text.includes('heads') || text.includes('tails');
+      if (hasKeyWords && hasMoreTrials && hasEvidence) setFeedback('exitTicketFeedback', 'Strong exit ticket! You used probability vocabulary, explained more trials, and included evidence from the lab.', 'good');
+      else setFeedback('exitTicketFeedback', 'Add more detail. Use the words theoretical probability and experimental probability, explain what happens with more trials, and include evidence from the spinner or coin.', 'warn');
+    }
+
+    function runTests() {
+      console.assert(spinnerOutcomes.length === 4, 'Test: four spinner outcomes exist');
+      console.assert(spinnerOutcomes.reduce((sum, item) => sum + item.ranges.length, 0) === 10, 'Test: spinner has ten equal sections');
+      console.assert(decimalClose('0.4', 0.4), 'Test: decimal checker accepts correct decimal');
+      console.assert(normalizeFraction(' 4 /10 ').replace('/', '/') === '4/10', 'Test: fraction whitespace is removed');
+      console.assert(document.querySelectorAll('.panel').length === 9, 'Test: nine screens exist');
+      document.getElementById('warmupResponse').value = 'yes';
+      console.assert(requireText('warmupResponse', 1), 'Test: one-word warm-up response is accepted');
+      console.log('Probability lab self-tests completed.');
+    }
+
+    createSpinnerInputs();
+    updateSpinnerTable();
+    updateCoinTable();
+    runTests();
+  </script>
+</body>
+</html>
